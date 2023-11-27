@@ -10,10 +10,10 @@ def index_page():
 
 @index_views.route('/init', methods=['GET'])
 def init():
-    db.drop_all()
-    db.create_all()
-    create_staff("adminpass","999", "admin")
-    createCoursesfromFile('testData/courseData.csv')
+    # db.drop_all()
+    # db.create_all()
+    # create_staff("adminpass","999", "admin")
+    # createCoursesfromFile('testData/courseData.csv')
     return jsonify(message='staff created, courses created, db initialized!')
 
 @index_views.route('/health', methods=['GET'])
