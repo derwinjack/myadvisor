@@ -13,8 +13,6 @@ from App.controllers import (
     get_program_by_name,
     get_student_by_id,
     get_course_by_courseCode,
-    addCoursetoHistory,
-    getCompletedCourseCodes,
     generator,
     addCourseToPlan,
     verify_student

@@ -13,8 +13,6 @@ from App.controllers import (
     get_all_users,
     get_all_users_json,
     jwt_required,
-    addSemesterCourses,
-    get_all_OfferedCodes,
     get_all_programCourses,
     verify_staff
 )

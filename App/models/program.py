@@ -1,5 +1,5 @@
 from App.database import db
-from App.models import Department
+from App.models import department
 
 class Program(db.Model):
     __tablename__ = 'program'

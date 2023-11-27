@@ -5,19 +5,12 @@ from App.controllers import (
     get_course_by_courseCode, 
     get_credits, 
     getPrereqCodes,
-    getCompletedCourses,
-    createPlanCourse,
-    deleteCourseFromCoursePlan,
     get_allCore,
     get_allFoun,
     get_allElectives,
-    getCompletedCourseCodes,
     convertToList,
-    get_all_OfferedCodes,
-    isCourseOffered,
     programCourses_SortedbyRating,
     programCourses_SortedbyHighestCredits,
-    get_all_courses_by_planid,
     
 )
 
