@@ -1,19 +1,28 @@
-from App.models import Program, Course, Staff
+from App.models import User, Staff
 from App.database import db
 
 
-def create_staff(password, staff_id, name):
-    new_staff = Staff(password, staff_id, name)
+def create_staff(name, password, role):
+    staff = Staff.query.get(name)
+    if staff:
+        return None
+    new_staff = Staff(name, password, role)
     db.session.add(new_staff)
     db.session.commit()
     return new_staff
-
 
 def verify_staff(username):
     staff=Staff.query.filter_by(id=username).first()
     if staff:
         return True
     return False
+
+def get_all_staff_json():
+    staffs = Staff.query.all()
+    if not staffs:
+        return []
+    staffs = [member.get_json() for member in staffs]
+    return staffs
 
 def get_staff_by_id(ID):
     return Staff.query.filter_by(id=ID).first()

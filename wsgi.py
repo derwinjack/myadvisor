@@ -6,26 +6,7 @@ from flask.cli import with_appcontext, AppGroup
 
 from App.database import db, get_migrate
 from App.main import create_app
-from App.controllers import ( 
-    create_user, 
-    get_all_users_json, 
-    get_all_users, 
-    create_program,
-    get_core_credits,
-    createCoursesfromFile,
-    get_course_by_courseCode,
-    get_prerequisites,
-    get_all_courses,
-    create_programCourse,
-    create_student,
-    create_staff,
-    get_program_by_name,
-    get_all_programCourses,
-    get_allCore,
-    addCourseToPlan,
-    get_student_by_id,
-    generator
-    )
+from App.controllers import *
 
 test1 = ["COMP1600",  "COMP1601", "COMP1602", "COMP1603", "COMP1604", "MATH1115", "INFO1600", "INFO1601",  "FOUN1101", "FOUN1105", "FOUN1301", "COMP3605", "COMP3606", "COMP3607", "COMP3608",]
 
@@ -44,29 +25,33 @@ def initialize():
     db.drop_all()
     db.create_all()
     create_user('bob', 'bobpass')
-    createCoursesfromFile('testData/courseData.csv')
-    create_program("Computer Science Major", 69, 15, 9)
-    create_student(816, "boo", "testing", "Computer Science Major")
-    create_staff("adminpass","999", "admin")
+    create_staff('daniel', 'danpass', 'admin')
+    create_staff('derwin', 'derpass', 'dean')
+    create_student('sanjay',  'jaypass', 'DCIT')
+    create_student('mohan',  'pass', 'DCIT')
+    # createCoursesfromFile('testData/courseData.csv')
+    # create_program("Computer Science Major", 69, 15, 9)
+    # create_student(816, "boo", "testing", "Computer Science Major")
+    # create_staff("admin","999", "admin")
     
-    for c in test1:
-        addCoursetoHistory(816, c)
-    print('Student course history updated')
+    # for c in test1:
+    #     addCoursetoHistory(816, c)
+    # print('Student course history updated')
 
-    with open(file_path, 'r') as file:
-        for i, line in enumerate(file):
-            line = line.strip()
-            if i ==0:
-                programName = line
-            else:
-                course = line.split(',')
-                create_programCourse(programName, course[0],int(course[1]))
+    # with open(file_path, 'r') as file:
+    #     for i, line in enumerate(file):
+    #         line = line.strip()
+    #         if i ==0:
+    #             programName = line
+    #         else:
+    #             course = line.split(',')
+    #             create_programCourse(programName, course[0],int(course[1]))
     
-    file_path1='testData/test2.txt'
-    with open(file_path1, 'r') as file:
-        for i, line in enumerate(file):
-            line = line.strip()
-            addSemesterCourses(line)
+    # file_path1='testData/test2.txt'
+    # with open(file_path1, 'r') as file:
+    #     for i, line in enumerate(file):
+    #         line = line.strip()
+    #         addSemesterCourses(line)
 
 
 
@@ -91,20 +76,59 @@ def create_user_command(username, password):
     create_user(username, password)
     print(f'{username} created!')
 
-# this command will be : flask user create bob bobpass
-
 @user_cli.command("list", help="Lists users in the database")
 @click.argument("format", default="string")
 def list_user_command(format):
-    if format == 'string':
-        print(get_all_users())
-    else:
-        print(get_all_users_json())
+    print(get_all_users_json())
 
 app.cli.add_command(user_cli) # add the group to the cli
 
 
 # ... (previous code remains the same)
+
+'''
+Staff Commands
+'''
+staff_cli = AppGroup('staff',help='testing staff commands')
+@staff_cli.command("create",help="create staff")
+@click.argument("name", type=str)
+@click.argument("password", type=str)
+@click.argument("role", type=str)
+def create_staff_command(name, password, role): 
+  create_staff(name, password, role)
+  print(f'Staff {name} created')
+
+@staff_cli.command("list", help="Lists users in the database")
+@click.argument("format", default="string")
+def list_staff_command(format):
+    print(get_all_staff_json())
+
+@staff_cli.command("addprogram",help='testing add program feature')
+@click.argument("name", type=str)
+@click.argument("core", type=int)
+@click.argument("elective", type=int)
+@click.argument("foun", type=int)
+def create_program_command(name,core,elective,foun):
+  newprogram=create_program(name,core,elective,foun)
+  print(f'{newprogram.get_json()}')
+
+@staff_cli.command("addprogramcourse",help='testing add program feature')
+@click.argument("name", type=str)
+@click.argument("code", type=str)
+@click.argument("num", type=int)
+def add_program_requirements(name,code,num):
+  response=create_programCourse(name, code, num)
+  print(response)
+
+@staff_cli.command("addofferedcourse",help='testing add courses offered feature')
+@click.argument("code", type=str)
+def add_offered_course(code):
+  course=addSemesterCourses(code)
+  if course:
+    print(f'Course details: {course}')
+
+app.cli.add_command(staff_cli)
+
 
 '''
 Student
@@ -116,9 +140,15 @@ student_cli = AppGroup("student", help="Student object commands")
 @click.argument("student_id", type=str)
 @click.argument("password", type=str)
 @click.argument("name", type=str)
-@click.argument("programName", type=str)
-def create_student_command(student_id, password, name, programname):
-    create_student(student_id, password, name, programname)
+@click.argument("program", type=str)
+def create_student_command(name, password, program):
+    create_student(name, password, program)
+
+@student_cli.command("list", help="Lists students in the database")
+@click.argument("format", default="string")
+def list_staff_command(format):
+    print(get_all_students_json())
+
 
 @student_cli.command("addCourse", help="Student adds a completed course to their history")
 @click.argument("student_id", type=str)
@@ -147,47 +177,68 @@ def generatePlan(student_id, command):
     for c in courses:
         print(c)
 
-
 app.cli.add_command(student_cli)
 
 '''
-Staff Commands
+Department Commands
 '''
-staff_cli = AppGroup('staff',help='testing staff commands')
-@staff_cli.command("create",help="create staff")
-@click.argument("id", type=str)
-@click.argument("password", type=str)
-@click.argument("name", type=str)
-def create_staff_command(id, password, name): 
-  newstaff=create_staff(password,id, name)
-  print(f'Staff {newstaff.name} created')
+dept = AppGroup('department', help='testing department commands')
+@dept.command("create", help='create department')
+@click.argument('name', type=str)
+def create_dept_command(name):
+    create_department(name)
+    print(f'{name} created')
 
-@staff_cli.command("addprogram",help='testing add program feature')
-@click.argument("name", type=str)
-@click.argument("core", type=int)
-@click.argument("elective", type=int)
-@click.argument("foun", type=int)
-def create_program_command(name,core,elective,foun):
-  newprogram=create_program(name,core,elective,foun)
-  print(f'{newprogram.get_json()}')
+@dept.command("list", help="Lists departments in the database")
+@click.argument("format", default="string")
+def list_staff_command(format):
+    print(get_all_depts_json())
 
-@staff_cli.command("addprogramcourse",help='testing add program feature')
-@click.argument("name", type=str)
-@click.argument("code", type=str)
-@click.argument("num", type=int)
-def add_program_requirements(name,code,num):
-  response=create_programCourse(name, code, num)
-  print(response)
+app.cli.add_command(dept)
 
-@staff_cli.command("addofferedcourse",help='testing add courses offered feature')
-@click.argument("code", type=str)
-def add_offered_course(code):
-  course=addSemesterCourses(code)
-  if course:
-    print(f'Course details: {course}')
+'''
+Program Commands
+'''
+# program = AppGroup('program',help='testing program commands')
+# @program.command("create",help="create program")
+# @click.argument("name", type=str)
+# @click.argument("password", type=str)
+# @click.argument("role", type=str)
+# def create_staff_command(name, password, role): 
+#   create_staff(name, password, role)
+#   print(f'Staff {name} created')
 
+# @staff_cli.command("list", help="Lists users in the database")
+# @click.argument("format", default="string")
+# def list_staff_command(format):
+#     print(get_all_staff_json())
 
-app.cli.add_command(staff_cli)
+# @staff_cli.command("addprogram",help='testing add program feature')
+# @click.argument("name", type=str)
+# @click.argument("core", type=int)
+# @click.argument("elective", type=int)
+# @click.argument("foun", type=int)
+# def create_program_command(name,core,elective,foun):
+#   newprogram=create_program(name,core,elective,foun)
+#   print(f'{newprogram.get_json()}')
+
+# @staff_cli.command("addprogramcourse",help='testing add program feature')
+# @click.argument("name", type=str)
+# @click.argument("code", type=str)
+# @click.argument("num", type=int)
+# def add_program_requirements(name,code,num):
+#   response=create_programCourse(name, code, num)
+#   print(response)
+
+# @staff_cli.command("addofferedcourse",help='testing add courses offered feature')
+# @click.argument("code", type=str)
+# def add_offered_course(code):
+#   course=addSemesterCourses(code)
+#   if course:
+#     print(f'Course details: {course}')
+
+# app.cli.add_command(staff_cli)
+
 
 '''
 Test Commands
@@ -328,19 +379,13 @@ def getProgram(programname):
    program = get_program_by_name(programname)
    print(f'{program.id}')
 
-@program.command('addCourse', help='Add a course to a program')
-@click.argument('programname', type=str)
-@click.argument('code', type=str)
-@click.argument('type', type=int)
-def addProgramCourse(programname, code, type):
-   create_programCourse(programname, code, type)
+# @program.command('addCourse', help='Add a course to a program')
+# @click.argument('programname', type=str)
+# @click.argument('code', type=str)
+# @click.argument('type', type=int)
+# def addProgramCourse(programname, code, type):
+#    create_programCourse(programname, code, type)
 
-@program.command('getprogramCourses', help='Get all courses of a program')
-@click.argument('programname', type=str)
-def addProgramCourse(programname):
-   courses = get_all_programCourses(programname)
-   for c in courses:
-       print(f'{c.code}')
 
 app.cli.add_command(program)
 #################################################################

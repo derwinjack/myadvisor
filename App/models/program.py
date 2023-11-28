@@ -2,7 +2,7 @@ from App.database import db
 from App.models import department
 
 class Program(db.Model):
-    __tablename__ = 'program'
+    __tablename__ = 'programs'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     core_credits = db.Column(db.Integer)
@@ -10,9 +10,10 @@ class Program(db.Model):
     foun_credits = db.Column(db.Integer)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
     
-    department = db.relationship('Department', back_populates='program', overlaps='program')
-    students = db.relationship('Student', back_populates='program', lazy=True)
-    courses = db.relationship('ProgramCourses', backref='program', lazy=True)
+    dept = db.relationship('Department', back_populates='prog')
+    stu = db.relationship('Student', back_populates='prog', uselist=False)
+    
+    courses = db.relationship('Course', backref='program', lazy=True)
 
 
     def __init__(self, name, core, elect, foun):

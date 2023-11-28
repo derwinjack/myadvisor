@@ -4,19 +4,19 @@ from App.database import db
 class Student(User):
     id = db.Column(db.String(10), db.ForeignKey('user.id'), primary_key=True)
     name = db.Column(db.String(50))
-    gpa = db.Column(db.Float)
-    program_id = db.Column(db.ForeignKey('program.id')) 
+    gpa = db.Column(db.Float) 
+    program_id = db.Column(db.ForeignKey('programs.id')) 
     
-    department = db.relationship('Department', backref='student', lazy=True)
-    associated_program = db.relationship('Program', back_populates='student', overlaps="program")
-    course_history = db.relationship('Course', back_populates='student', lazy=True)
-    course_plan = db.relationship('CoursePlan', back_populates='student')
+    prog = db.relationship('Program', back_populates='stu')
+    
+    course_plan = db.relationship('CoursePlan', back_populates='student', uselist=False)
 
 
-    def __init__(self, username, password, name, program_id):
-        super().__init__(username, password)
-        self.id = username
+    def __init__(self, name, password, program_id):
+        super().__init__(name, password)
+        self.id = super().id
         self.name = name
+        self.gpa= 0.0
         self.program_id = program_id
 
     def get_json(self):
