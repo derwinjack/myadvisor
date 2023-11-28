@@ -1,6 +1,8 @@
+from flask import request
 from App.models import Student, CoursePlan, Program
 from App.controllers import (get_program_by_name)
 from App.database import db
+from App.models.courses import Course
 
 def create_student(student_id, password, name, programname):
     program = get_program_by_name(programname)
@@ -53,4 +55,26 @@ def verify_student(username):
         return True
     return False
 
+#Please review 
+#def add_course_to_history(student_id):
+    student = Student.query.get(student_id)
+    if not student:
+        return {'message': f'Student with ID {student_id} not found.'}, 404
+
+    data = request.get_json()
+    course_code = data.get('course_code')
+    grade = data.get('grade')
+
+    if not course_code or not grade:
+        return {'message': 'Course code and grade are required fields.'}, 400
+
+    course = Course.query.get(course_code)
+    if not course:
+        return {'message': f'Course with code {course_code} not found.'}, 404
+
+    course_history_entry = course_history(student=student, course=course, grade=grade)
+    db.session.add(course_history_entry)
+    db.session.commit()
+
+    return {'message': 'Course added to history successfully', 'course_history_entry': course_history_entry.get_json()}, 201
 
