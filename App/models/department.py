@@ -6,8 +6,7 @@ class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30))
 
-    programs = db.relationship('Program', backref='departments', lazy=True)
-
+    prog = db.relationship('Program', back_populates='dept', uselist=False)
 
 
     def __init__(self, name):

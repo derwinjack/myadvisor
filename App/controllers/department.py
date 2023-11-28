@@ -1,22 +1,14 @@
-# relevant controllers go here
-
-# relevant controllers go here
 from flask import Flask, request, jsonify
 from App.models import Department, Program
 from App.database import db
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'your_database_uri'
-db.init_app(app)
 
 # Controller methods
 
-def create_department():
-    data = request.get_json()
-    new_department = Department(name=data['name'])
+def create_department(name):
+    new_department = Department(name)
     db.session.add(new_department)
     db.session.commit()
-    return {'message': 'Department created successfully', 'department': new_department.get_json()}, 201
 
 
 def get_department(department_id):
@@ -38,6 +30,12 @@ def update_department(department_id):
     else:
         return {'message': 'Department not found'}, 404
 
+def get_all_depts_json():
+    depts = Department.query.all()
+    if not depts:
+        return []
+    depts = [dept.get_json() for dept in depts]
+    return depts
 
 def delete_department(department_id):
     department = Department.query.get(department_id)

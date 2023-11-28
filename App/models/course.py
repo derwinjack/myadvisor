@@ -1,25 +1,24 @@
 from App.database import db
-from App.models import prerequisites
+from App.models import prerequisites, courseHistory
 import json
 
 class Course(db.Model):
-    courseCode = db.Column(db.String(8), primary_key=True)
+    __tablename__='courses'
+    id = db.Column(db.String(8), primary_key=True)
     courseTitle = db.Column(db.String(50))
     complete = db.Column(db.Boolean)
     credits = db.Column(db.Integer)
     grade = db.Column(db.Float)
     semester = db.Column(db.Integer)
     year = db.Column(db.Integer)
-    prereq_id = db.Column(db.Integer, db.ForeignKey('prerequisites.id'))
-
-    students = db.relationship('Student', backref='courses', lazy=True)
-    programs = db.relationship('ProgramCourses', backref='courses', lazy=True)
-    prerequisites = db.relationship('Prerequisites', backref='courses', lazy = True)
-    course_plan = db.relationship('CoursePlan', backref='courses', lazy=True)
+    course_plan_id = db.Column(db.Integer, db.ForeignKey('course_plans.id'), nullable=False)
+    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=False)
+    
+    prereq = db.relationship('Prerequisites', backref='course', lazy=True)
 
     
     def __init__(self, code, title, credits, grade, semester, year, complete, prereq):
-        self.courseCode = code
+        self.id = code
         self.courseTitle = title
         self.credits = credits
         self.grade = grade
@@ -30,7 +29,7 @@ class Course(db.Model):
     
     def get_json(self):
         return{
-            'Course Code:': self.courseCode,
+            'Course Code:': self.id,
             'Course Name: ': self.courseTitle,
             'Course Grade: ': self.grade,
             'No. of Credits: ': self.credits,

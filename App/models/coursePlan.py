@@ -23,16 +23,17 @@ class PrioritizeElectivesStrategy(CoursePlanStrategy):
         return "Prioritize Electives Course Plan Chosen"
 
 class CoursePlan(db.Model):
-    planId=db.Column(db.Integer, primary_key=True)
-    studentId=db.Column(db.Integer,  db.ForeignKey('student.id'), nullable=False)
+    __tablename__='course_plans'
+    id=db.Column(db.Integer, primary_key=True)
+    student_id=db.Column(db.Integer,  db.ForeignKey('student.id'), unique=True)
     
-    student = db.relationship('Student', backref=db.backref('course_plans', uselist=True))
-    courses = db.relationship('Courses', backref = 'course_plans', lazy=True)
+    student = db.relationship('Student', back_populates='course_plan', uselist=True)
+    courses = db.relationship('Course', backref = 'course_plan', lazy=True)
 
     
     
     def __init__(self, plan_id, student_id, strategy: CoursePlanStrategy):
-        self.plan_id = plan_id
+        self.id = plan_id
         self.studentId = student_id
         self._strategy = strategy
         
@@ -44,7 +45,7 @@ class CoursePlan(db.Model):
 
     def get_json(self):
         return{
-            'planId': self.planId,
+            'planId': self.id,
             'studentId': self.studentId,
             'Course Plan Strategy: ': self._strategy.__class__.__name__
         }

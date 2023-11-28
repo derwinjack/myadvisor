@@ -4,13 +4,7 @@ from App.controllers import (
     get_program_by_id, 
     get_course_by_courseCode, 
     get_credits, 
-    getPrereqCodes,
-    get_allCore,
-    get_allFoun,
-    get_allElectives,
-    convertToList,
-    programCourses_SortedbyRating,
-    programCourses_SortedbyHighestCredits,
+    getPrereqCodes
     
 )
 
