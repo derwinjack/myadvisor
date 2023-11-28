@@ -2,8 +2,8 @@ from App.models import Program, Course, Staff
 from App.database import db
 
 
-def create_staff(password, staff_id, name):
-    new_staff = Staff(password, staff_id, name)
+def create_staff(password, staff_id, name, role):
+    new_staff = Staff(password, staff_id, name, role)
     db.session.add(new_staff)
     db.session.commit()
     return new_staff
@@ -65,3 +65,4 @@ def get_staff_by_id(ID):
 #     except Exception as e:
 #         db.session.rollback()
 #         print(f"An error occurred while removing the course: {e}")
+
