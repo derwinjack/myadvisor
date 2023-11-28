@@ -1,28 +1,34 @@
+from flask import request
 from App.models import Course, Prerequisites
 from App.controllers.prerequistes import (create_prereq, get_all_prerequisites)
 from App.database import db
 import json, csv
 
-def createPrerequistes(prereqs, courseName):
-    for prereq_code in prereqs:
-        prereq_course = Course.query.filter_by(courseCode=prereq_code).first()
+#def createPrerequistes(prereqs, courseName):
+ ##      prereq_course = Course.query.filter_by(courseCode=prereq_code).first()
         
-        if prereq_course:
-            create_prereq(prereq_code,courseName) 
+   #     if prereq_course:
+    #        create_prereq(prereq_code,courseName) 
 
-def create_course(code, name, rating, credits, prereqs):
-    already = get_course_by_courseCode(code)
-    if already is None:
-        course = Course(code, name, rating, credits)
+def create_course():
+    data = request.get_json()
+    prereq_id = data.get('prereq_id')  # assuming prereq_id is provided in the request data
+    prereq = Prerequisites.query.get(prereq_id) if prereq_id else None
 
-        if prereqs:
-            createPrerequistes(prereqs, name)
-            
-        db.session.add(course)
-        db.session.commit()
-        return course
-    else:
-        return None
+    new_course = Course(
+        code=data['courseCode'],
+        title =data['courseTitle'],
+        credits=data['credits'],
+        grade=data['grade'],
+        semester=data['semester'],
+        year=data['year'],
+        complete=data['complete'],
+        prereq=prereq
+    )
+    
+    db.session.add(new_course)
+    db.session.commit()
+    return {'message': 'Course created successfully', 'course': new_course.get_json()}, 201
 
 
 def createCoursesfromFile(file_path):
@@ -31,12 +37,16 @@ def createCoursesfromFile(file_path):
             csv_reader = csv.DictReader(file)
             for row in csv_reader:
                 courseCode = row["courseCode"]
-                courseName = row["courseName"]
+                courseTitle = row["courseTitle"]
                 credits = int(row["numCredits"])
-                rating = int(row["rating"])
-                prerequisites_codes = row["preReqs"].split(',')
+                rating = int(row["ratings"])
+                grade=row['grade']
+                semester=row['semester']
+                year=int (row['year'])
+                complete= row['complete']
+                prereq= row["preReqs"].split(',')
 
-                create_course(courseCode, courseName, rating, credits, prerequisites_codes)
+                create_course(courseCode, courseTitle, credits,rating, grade, semester, year, complete, prereq)
                 
     except FileNotFoundError:
         print("File not found.")
@@ -70,6 +80,43 @@ def get_prerequisites(code):
 
 def get_credits(code):
     course = get_course_by_courseCode(code)
+    return course.credits if course else 0
+
+def get_ratings(code):
+    course = get_course_by_courseCode(code)
+    return course.rating if course else 0
+
+
+def update_course(course_code):
+    course = Course.query.get(course_code)
+    if course:
+        data = request.get_json()
+        prereq_id = data.get('prereq_id')
+        prereq = Prerequisites.query.get(prereq_id) if prereq_id else None
+
+        course.title = data.get('courseTitle', course.title)
+        course.credits = data.get('credits', course.credits)
+        course.grade = data.get('grade', course.grade)
+        course.semester = data.get('semester', course.semester)
+        course.year = data.get('year', course.year)
+        course.complete = data.get('complete', course.complete)
+        course.prereq = prereq
+
+        db.session.commit()
+        return {'message': 'Course updated successfully', 'course': course.get_json()}
+    else:
+        return {'message': 'Course not found'}, 404
+
+
+def delete_course(course_code):
+    course = Course.query.get(course_code)
+    if course:
+        db.session.delete(course)
+        db.session.commit()
+        return {'message': 'Course deleted successfully'}, 200
+    else:
+        return {'message': 'Course not found'}, 404
+
     return course.credits if course else 0
 
 def get_ratings(code):
