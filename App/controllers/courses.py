@@ -69,6 +69,14 @@ def courses_Sorted_byRating():
     
     return codes
 
+def get_all_courses():
+    return Course.query.all()
+
+def get_all_course_codes():
+    all_courses = Course.query.all()
+    course_codes = [course.courseCode for course in all_courses]
+    return course_codes
+
 def courses_Sorted_byRating_Objects():
     return Course.query.order_by(Course.rating.asc()).all()
     
@@ -116,6 +124,7 @@ def delete_course(course_code):
         return {'message': 'Course deleted successfully'}, 200
     else:
         return {'message': 'Course not found'}, 404
+
 
 
 
