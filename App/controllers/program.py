@@ -1,13 +1,28 @@
+from flask import jsonify, request
 from App.models import Program
 from App.database import db
 
-def create_program(name, core, elective, foun):
-    newProgram = Program(name, core, elective, foun)
+def create_program(name, core_credits, elective_credits, foun_credits, department_id):
+    newProgram = Program(name, core_credits, elective_credits, foun_credits, department_id)
     db.session.add(newProgram)
     print("Program successfully created")
     db.session.commit()
     return newProgram
-    
+
+def update_program(program_id):
+    program = Program.query.get(program_id)
+    if program:
+        data = request.get_json()
+        program.name = data.get('name', program.name)
+        program.core_credits = data.get('core_credits', program.core_credits)
+        program.elective_credits = data.get('elective_credits', program.elective_credits)
+        program.foun_credits = data.get('foun_credits', program.foun_credits)
+        program.department_id = data.get('department_id', program.department_id)
+
+        db.session.commit()
+        return jsonify({'message': 'Program updated successfully', 'program': program.get_json()})
+    else:
+        return jsonify({'message': 'Program not found'}), 404
     
 
 def get_program_by_name(programName):
@@ -59,6 +74,8 @@ def get_all_courses(programName):
 
     all = core_courses + elective_courses + foun_courses
     return all
+
+
 
 
 
