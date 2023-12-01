@@ -1,11 +1,13 @@
 from flask import request
-from App.models import CoursePlan, Course, Student
+from App.models import CoursePlan, Course, Student, Program
 from App.database import db 
+from App.controllers import program
 from App.controllers import (
     get_program_by_id, 
     get_course_by_courseCode, 
     get_credits, 
-    getPrereqCodes
+    getPrereqCodes,
+    
     
 )
 
@@ -266,7 +268,7 @@ def removeCoursesFromList(list1,list2):
 def EasyCoursesStrategy(Student):
     program = get_program_by_id(Student.program_id)
     completed = Student.course_history
-    codesSortedbyRating = programCourses_SortedbyRating(Student.program_id)
+    codesSortedbyRating = program.programCourses_SortedbyHighestRating(Student.program_id)
 
     coursesToDo = removeCoursesFromList(completed, codesSortedbyRating)
 
@@ -349,7 +351,7 @@ def CustomPlanStrategy(Student):
 
 def FastGradStrategy(Student):
     program = get_program_by_id(Student.program_id)
-    sortedCourses = programCourses_SortedbyHighestCredits(Student.program_id)
+    sortedCourses = program.programCourses_SortedbyHighestCredits(Student.program_id)
     completed = Student.course_history
 
     coursesToDo = removeCoursesFromList(completed, sortedCourses)
