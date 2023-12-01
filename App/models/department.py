@@ -6,6 +6,7 @@ class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30))
 
+    staff_member = db.relationship('Staff', back_populates='dept')
     prog = db.relationship('Program', back_populates='dept', uselist=False)
 
 

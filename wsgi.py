@@ -25,8 +25,8 @@ def initialize():
     db.drop_all()
     db.create_all()
     create_user('bob', 'bobpass')
-    create_staff('daniel', 'danpass', 'admin')
-    create_staff('derwin', 'derpass', 'dean')
+    create_staff('daniel', 'danpass', 'admin', 1)
+    create_staff('derwin', 'derpass', 'dean', 1)
     create_student('sanjay',  'jaypass', 'DCIT')
     create_student('mohan',  'pass', 'DCIT')
     # createCoursesfromFile('testData/courseData.csv')
@@ -94,8 +94,9 @@ staff_cli = AppGroup('staff',help='testing staff commands')
 @click.argument("name", type=str)
 @click.argument("password", type=str)
 @click.argument("role", type=str)
-def create_staff_command(name, password, role): 
-  create_staff(name, password, role)
+@click.argument("dept_id")
+def create_staff_command(name, password, role, dept_id): 
+  create_staff(name, password, role, dept_id)
   print(f'Staff {name} created')
 
 @staff_cli.command("list", help="Lists users in the database")

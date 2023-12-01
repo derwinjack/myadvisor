@@ -2,11 +2,11 @@ from App.models import User, Staff
 from App.database import db
 
 
-def create_staff(name, password, role):
+def create_staff(name, password, role, dept_id):
     staff = Staff.query.get(name)
     if staff:
         return None
-    new_staff = Staff(name, password, role)
+    new_staff = Staff(name, password, role, dept_id)
     db.session.add(new_staff)
     db.session.commit()
     return new_staff

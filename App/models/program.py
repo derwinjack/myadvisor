@@ -13,8 +13,6 @@ class Program(db.Model):
     dept = db.relationship('Department', back_populates='prog')
     stu = db.relationship('Student', back_populates='prog', uselist=False)
     
-    courses = db.relationship('Course', backref='program', lazy=True)
-
 
     def __init__(self, name, core, elect, foun):
        self.name = name

@@ -12,7 +12,7 @@ class Course(db.Model):
     semester = db.Column(db.Integer)
     year = db.Column(db.Integer)
     course_plan_id = db.Column(db.Integer, db.ForeignKey('course_plans.id'), nullable=False)
-    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=False)
+    
     
     prereq = db.relationship('Prerequisites', backref='course', lazy=True)
 

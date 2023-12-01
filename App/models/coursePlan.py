@@ -25,11 +25,12 @@ class PrioritizeElectivesStrategy(CoursePlanStrategy):
 class CoursePlan(db.Model):
     __tablename__='course_plans'
     id=db.Column(db.Integer, primary_key=True)
-    student_id=db.Column(db.Integer,  db.ForeignKey('student.id'), unique=True)
+    student_id = db.Column(db.Integer,  db.ForeignKey('student.id'), unique=True)
+    sem_id = db.Column(db.Integer, db.ForeignKey('semesters.id'), unique=True)
     
     student = db.relationship('Student', back_populates='course_plan', uselist=True)
     courses = db.relationship('Course', backref = 'course_plan', lazy=True)
-
+    sem_id = db.relationship('Semester', back_populates = 'course_plans', uselist=False)
     
     
     def __init__(self, plan_id, student_id, strategy: CoursePlanStrategy):
