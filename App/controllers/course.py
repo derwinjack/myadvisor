@@ -22,7 +22,9 @@ def create_course():
         courseTitle=data['courseTitle'],
         complete=bool(data['complete']),
         credits=int(data['credits']),
-        grade=float(data['grade']),
+        type= (data['type']),
+        rating= int(data['rating']),
+        grade=float(data['grade']), 
         semester_id=semester_id,
         year=int(data['year']),
         course_plan_id=int(data['course_plan_id'])
@@ -44,7 +46,8 @@ def createCoursesfromFile(file_path):
                 courseCode = row["courseCode"]
                 courseTitle = row["courseTitle"]
                 credits = int(row["numCredits"])
-                rating = int(row["ratings"])
+                rating = int(row["rating"])
+                type = row['type']
                 grade=row['grade']
                 semester=row['semester']
                 year=int (row['year'])
@@ -156,6 +159,7 @@ def delete_course(course_code):
         return {'message': 'Course deleted successfully'}, 200
     else:
         return {'message': 'Course not found'}, 404
+
 
 
 
