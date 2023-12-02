@@ -8,6 +8,8 @@ class Course(db.Model):
     courseTitle = db.Column(db.String(50))
     complete = db.Column(db.Boolean)
     credits = db.Column(db.Integer)
+    rating = db.Column(db.Integer)
+    type = db.Column(db.string(5))
     grade = db.Column(db.Float)
     semester = db.Column(db.Integer)
     course_plan_id = db.Column(db.Integer, db.ForeignKey('course_plans.id'), nullable=False)
@@ -16,11 +18,13 @@ class Course(db.Model):
     prereq = db.relationship('Prerequisites', backref='course', lazy=True)
 
     
-    def __init__(self, code, title, credits, grade, semester, year, complete, prereq):
+    def __init__(self, code, title, credits, ratings,  grade, type,  semester, year, complete, prereq):
         self.id = code
         self.courseTitle = title
         self.credits = credits
         self.grade = grade
+        self.type = type
+        self.rating = ratings
         self.semester = semester
         self.year = year
         self.complete = complete
@@ -32,6 +36,8 @@ class Course(db.Model):
             'Course Name: ': self.courseTitle,
             'Course Grade: ': self.grade,
             'No. of Credits: ': self.credits,
+            'Course Type: ': self.type,
+            'course rating': self.rating,
             'Semester: ': self.semester,
             'Year: ': self.year,
             'Completed?': self.complete,

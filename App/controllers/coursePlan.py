@@ -1,13 +1,19 @@
-from App.models import CoursePlan
+from flask import request
+from App.controllers.course import get_all_course_codes, get_all_courses
+from App.models import CoursePlan, Course, Student, Program
 from App.database import db 
+from App.controllers import program
 from App.controllers import (
     get_program_by_id, 
     get_course_by_courseCode, 
     get_credits, 
-    getPrereqCodes
+    getPrereqCodes,
+    
     
 )
 
+def convertToList(iterable):
+    return list(iterable)
 
 
 def create_CoursePlan(id):
@@ -19,14 +25,90 @@ def create_CoursePlan(id):
 def getCoursePlan(studentid):
     return CoursePlan.query.filter_by(studentId=studentid).first()
 
+def update_course_plan(plan_id):
+    course_plan = CoursePlan.query.get(plan_id)
+    if course_plan:
+        data = request.get_json()
+
+        student_id = data.get('student_id')
+        student = Student.query.get(student_id) if student_id else None
+
+        strategy_type = data.get('strategy_type')
+        if strategy_type:
+            strategy = get_strategy_instance(strategy_type)
+            course_plan.set_strategy(strategy)
+
+        course_plan.plan_id = data.get('plan_id', course_plan.plan_id)
+        course_plan.student = student
+
+        db.session.commit()
+        return {'message': 'Course Plan updated successfully', 'course_plan': course_plan.get_json()}
+    else:
+        return {'message': 'Course Plan not found'}, 404
+
+
+
+
 def possessPrereqs(Student, course):
     preqs = getPrereqCodes(course.courseName)
-    completed = getCompletedCourseCodes(Student.id)
+    completed = Student.course_history
     for course in preqs:
         if course not in completed:
             return False
     
     return True
+
+#********(Trial and error Please Review)
+def isCourseOffered(courseCode):
+    # Assume 'course_code' is provided as a parameter
+    course = Course.query.get(courseCode)
+
+    if not course:
+        print(f"Course with code {courseCode} not found.")
+        return False
+
+    try:
+        year = int(input("Enter current year: "))
+        semester = int(input("Enter current semester "))
+
+        if course.year == year and course.semester == semester:
+            print(f"{courseCode} is offered in {year}, Semester {semester}.")
+            return True
+        else:
+            print(f"{courseCode} is not offered in {year}, Semester {semester}.")
+            return False
+    except ValueError:
+        print("Invalid input. Please enter valid integers for year and semester.")
+        return False
+
+
+#********(Trial and error Please Review)
+def deleteCourseFromCoursePlan(plan_id, courseCode):
+    # Retrieve the CoursePlan from the database based on plan_id
+    course_plan = CoursePlan.query.get(plan_id)
+
+    if not course_plan:
+        print(f"Course Plan with ID {plan_id} not found.")
+        return False
+
+    # Retrieve the Course from the database based on courseCode
+    course = Course.query.get(courseCode)
+
+    if not course:
+        print(f"Course with code {courseCode} not found.")
+        return False
+
+    # Check for course  in  course plan
+    if course in course_plan.courses:
+        # Remove the course from the course plan
+        course_plan.courses.remove(course)
+        db.session.commit()
+        print(f"Course {courseCode} removed from Course Plan {plan_id}.")
+        return True
+    else:
+        print(f"Course {courseCode} is not in Course Plan {plan_id}.")
+        return False
+
 
 def addCourseToPlan(Student, courseCode):
     course = get_course_by_courseCode(courseCode)
@@ -37,12 +119,12 @@ def addCourseToPlan(Student, courseCode):
             if haveAllpreqs:
                 plan = getCoursePlan(Student.id)
                 if plan:
-                    createPlanCourse(plan.planId, courseCode)
+                    create_CoursePlan(plan.planId, courseCode)
                     print("Course successfully added to course plan")
                     return plan
                 else:
                     plan = create_CoursePlan(Student.id)
-                    createPlanCourse(plan.planId, courseCode)
+                    create_CoursePlan(plan.planId, courseCode)
                     print("Plan successfully created and Course was successfully added to course plan")
                     return plan
         else:
@@ -83,8 +165,9 @@ def getRemainingCore(Student):
     remaining = []
 
     if programme:
-        reqCore=get_allCore(programme.name)
-        completed = getCompletedCourses(Student.id)
+        #reqCore=get_allCore(programme.name)
+        reqCore=program.get_core_courses(programme)
+        completed = Student.course_history
         remaining=getRemainingCourses(completed,reqCore)
     
     return remaining
@@ -95,8 +178,9 @@ def getRemainingFoun(Student):
     remaining =[]
 
     if programme:
-        reqFoun = get_allFoun(programme.name)
-        completed = getCompletedCourses(Student.id)
+        #reqFoun = get_allFoun(programme.name)
+        reqFoun = program.get_foun_courses(programme)
+        completed = Student.course_history
         remaining=getRemainingCourses(completed,reqFoun)
     
     return remaining
@@ -107,8 +191,9 @@ def getRemainingElec(Student):
     remaining = []
 
     if programme:
-        reqElec = get_allElectives(programme.name)  # Use the instance method to get elective courses
-        completed = getCompletedCourses(Student.id)
+        #reqElec = get_allElectives(programme.name)  # Use the instance method to get elective courses
+        reqElec = program.get_elective_courses(programme)
+        completed = Student.course_history
         remaining = getRemainingCourses(completed, reqElec)
             
     return remaining
@@ -116,12 +201,14 @@ def getRemainingElec(Student):
 
 def remElecCredits(Student):
     programme = get_program_by_id(Student.program_id)  # Get the student's program
-    completedcourses = getCompletedCourseCodes(Student.id)
+    completedcourses = Student.course_history
     requiredCreds = 0
+    type = 'elec'
 
     if programme:
         requiredCreds = programme.elective_credits  # Access the elective_credits attribute
-        elective_courses = get_allElectives(programme.name)  # Use the instance method to get elective courses
+        courses = get_all_courses(program)  # Use the instance method to get elective courses
+        elective_courses = program.get_all_courses_by_type(type)
         electCodes = convertToList(elective_courses)
         if electCodes:
             for code in electCodes:
@@ -132,8 +219,11 @@ def remElecCredits(Student):
     return requiredCreds
 
 
+
+
+
 def findAvailable(courseList):
-    listing=get_all_OfferedCodes()
+    listing= get_all_course_codes()
     available=[]
 
     for code in courseList:
@@ -156,7 +246,26 @@ def checkPrereq(Student, recommnded):
 def getTopfive(list):
     return list[:5]
 
-def prioritizeElectives(Student):
+def PrioritizeElectivesStrategy(Student):
+    program = get_program_by_id(Student.program_id)
+    completed = Student.course_history
+    codesSortedbyelectives = program.programCourses_SortedbyElectivesFirst(Student.program_id)
+    type = 'elec'
+    coursesToDo = removeCoursesFromList(completed, codesSortedbyelectives)
+    elecCredits = remElecCredits(Student)
+    
+    if elecCredits == 0:
+        allElectives = program.get_all_courses_by_type(type)
+        coursesToDo = removeCoursesFromList(allElectives, coursesToDo)
+    
+    coursesToDo = findAvailable(coursesToDo)
+
+    ableToDo = checkPrereq(Student, coursesToDo)
+    
+    
+    return getTopfive(ableToDo)
+
+#def PrioritizeElectivesStrategy(Student):
     #get available electives
     electives=findAvailable(getRemainingElec(Student))      
     credits=remElecCredits(Student)
@@ -183,18 +292,12 @@ def removeCoursesFromList(list1,list2):
     return newlist
     
 
-def easyCourses(Student):
+def EasyCoursesStrategy(Student):
     program = get_program_by_id(Student.program_id)
-    completed = getCompletedCourseCodes(Student.id)
-    codesSortedbyRating = programCourses_SortedbyRating(Student.program_id)
+    completed = Student.course_history
+    codesSortedbyRating = program.programCourses_SortedbyHighestRating(Student.program_id)
 
     coursesToDo = removeCoursesFromList(completed, codesSortedbyRating)
-
-    elecCredits = remElecCredits(Student)
-    
-    if elecCredits == 0:
-        allElectives = convertToList(get_allElectives(program.name))
-        coursesToDo = removeCoursesFromList(allElectives, coursesToDo)
     
     coursesToDo = findAvailable(coursesToDo)
 
@@ -205,13 +308,13 @@ def easyCourses(Student):
     return getTopfive(ableToDo)
 
 
-def fastestGraduation(Student):
+
+#def CustomPlanStrategy(Student):
     program = get_program_by_id(Student.program_id)
-    sortedCourses = programCourses_SortedbyHighestCredits(Student.program_id)
-    completed = getCompletedCourseCodes(Student.id)
+    completed = Student.course_history
+    codesSortedbyRating = programCourses_SortedbyRating(Student.program_id)
 
-    coursesToDo = removeCoursesFromList(completed, sortedCourses)
-
+    coursesToDo = removeCoursesFromList(completed, codesSortedbyRating)
     elecCredits = remElecCredits(Student)
     
     if elecCredits == 0:
@@ -219,11 +322,67 @@ def fastestGraduation(Student):
         coursesToDo = removeCoursesFromList(allElectives, coursesToDo)
     
     coursesToDo = findAvailable(coursesToDo)
+
+    ableToDo = checkPrereq(Student, coursesToDo)
+    
+    
+    return getTopfive(ableToDo)
+
+#********(Trial and error Please Review)
+def CustomPlanStrategy(Student):
+    student = Student.query.get(id)
+    
+    if not student:
+        return {'message': f'Student with ID {id} not found.'}, 404
+
+
+    try:
+        semester = int(input("Enter your semester: "))
+    except ValueError:
+        return {'message': 'Invalid input. Please enter a valid semester number.'}, 400
+
+    # Get a list of available courses for the current semester
+    available_courses = Course.query.filter_by(semester=semester).all()
+
+    if not available_courses:
+        return {'message': f'No courses available for semester {semester}.'}, 400
+
+    # Let the student choose 5 courses
+    chosen_courses = []
+    for i in range(5):
+        print(f"Choose course {i + 1} from the available courses:")
+        print("Available Courses:")
+        for j, course in enumerate(available_courses, start=1):
+            print(f"{j}. {course.courseCode} - {course.courseTitle}")
+
+        try:
+            choice = int(input("Enter the number of your choice: "))
+            if 1 <= choice <= len(available_courses):
+                chosen_course = available_courses[choice - 1]
+                chosen_courses.append(chosen_course)
+                available_courses.remove(chosen_course)
+            else:
+                print("Invalid choice. Please enter a valid number.")
+                i -= 1
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+   
+
+
+
+def FastGradStrategy(Student):
+    program = get_program_by_id(Student.program_id)
+    sortedCourses = program.programCourses_SortedbyHighestCredits(Student.program_id)
+    completed = Student.course_history
+
+    coursesToDo = removeCoursesFromList(completed, sortedCourses)
+    
+    coursesToDo = findAvailable(coursesToDo)
     ableToDo = checkPrereq(Student, coursesToDo)
 
     return getTopfive(ableToDo)
 
-def commandCall(Student, command):
+#def commandCall(Student, command):
     courses = []
 
     if command == "electives":
@@ -240,8 +399,22 @@ def commandCall(Student, command):
     
     return courses
 
+#********(Trial and error Please Review)
+def get_strategy_instance(strategy_type):
+    if strategy_type == 'CustomPlanStrategy':
+        return CustomPlanStrategy()
+    elif strategy_type == 'FastGradStrategy':
+        return FastGradStrategy()
+    elif strategy_type == 'EasyCoursesStrategy':
+        return EasyCoursesStrategy()
+    elif strategy_type == 'PrioritizeElectivesStrategy':
+        return PrioritizeElectivesStrategy()
+    else:
+        # Default to CustomPlanStrategy if the strategy_type is not recognized
+        return CustomPlanStrategy()
 
-def generator(Student, command):
+
+#def generator(Student, command):
     courses = []
 
     plan = getCoursePlan(Student.id)
@@ -254,10 +427,16 @@ def generator(Student, command):
 
     existingPlanCourses = get_all_courses_by_planid(plan.planId)
 
+
     planCourses = []
     for q in existingPlanCourses:
         planCourses.append(q.code)
 
+    for c in courses: 
+        if c not in planCourses:
+            create_CoursePlan(plan.planId, c)
+
+    return courses
     for c in courses: 
         if c not in planCourses:
             createPlanCourse(plan.planId, c)

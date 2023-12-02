@@ -1,6 +1,6 @@
 from flask import request
-from App.models import Course, Prerequisites
-from App.controllers.prerequistes import (create_prereq, get_all_prerequisites)
+from App.models import Course, Prerequisites, Semester
+from App.controllers import prerequistes, semester
 from App.database import db
 import json, csv
 
@@ -12,24 +12,31 @@ import json, csv
 
 def create_course():
     data = request.get_json()
-    prereq_id = data.get('prereq_id')  # assuming prereq_id is provided in the request data
+    prereq_id = data.get('prereq_id')  
     prereq = Prerequisites.query.get(prereq_id) if prereq_id else None
+    semester_id = int(data['semester_id'])
+
 
     new_course = Course(
-        code=data['courseCode'],
-        title =data['courseTitle'],
-        credits=data['credits'],
-        grade=data['grade'],
-        semester=data['semester'],
-        year=data['year'],
-        complete=data['complete'],
-        prereq=prereq
+        id=data['id'],
+        courseTitle=data['courseTitle'],
+        complete=bool(data['complete']),
+        credits=int(data['credits']),
+        type= (data['type']),
+        rating= int(data['rating']),
+        grade=float(data['grade']), 
+        semester_id=semester_id,
+        year=int(data['year']),
+        course_plan_id=int(data['course_plan_id'])
     )
-    
+
     db.session.add(new_course)
     db.session.commit()
-    return {'message': 'Course created successfully', 'course': new_course.get_json()}, 201
+    return "Course created successfully", 201
 
+
+
+   
 
 def createCoursesfromFile(file_path):
     try:
@@ -39,7 +46,8 @@ def createCoursesfromFile(file_path):
                 courseCode = row["courseCode"]
                 courseTitle = row["courseTitle"]
                 credits = int(row["numCredits"])
-                rating = int(row["ratings"])
+                rating = int(row["rating"])
+                type = row['type']
                 grade=row['grade']
                 semester=row['semester']
                 year=int (row['year'])
@@ -75,7 +83,7 @@ def courses_Sorted_byRating_Objects():
 
 def get_prerequisites(code):
     course = get_course_by_courseCode(code)
-    prereqs = get_all_prerequisites(course.courseName)
+    prereqs = prerequistes.get_all_prerequisites(course.courseName)
     return prereqs
 
 def get_credits(code):
@@ -85,6 +93,41 @@ def get_credits(code):
 def get_ratings(code):
     course = get_course_by_courseCode(code)
     return course.rating if course else 0
+
+def get_all_courses():
+    courses = Course.query.all()
+    course_list = []
+    for course in courses:
+        course_data = {
+            "id": course.id,
+            "courseTitle": course.courseTitle,
+            "complete": course.complete,
+            "credits": course.credits,
+            "grade": course.grade,
+            "semester": course.semester,
+            "year": course.year,
+            "course_plan_id": course.course_plan_id
+        }
+        course_list.append(course_data)
+    return {"courses": course_list}
+
+
+def get_course(course_id):
+    course = Course.query.get(course_id)
+    if course:
+        course_data = {
+            "id": course.id,
+            "courseTitle": course.courseTitle,
+            "complete": course.complete,
+            "credits": course.credits,
+            "grade": course.grade,
+            "semester": course.semester,
+            "year": course.year,
+            "course_plan_id": course.course_plan_id
+        }
+        return course_data
+    else:
+        return {"message": "Course not found"}, 404
 
 
 def update_course(course_code):
@@ -116,6 +159,11 @@ def delete_course(course_code):
         return {'message': 'Course deleted successfully'}, 200
     else:
         return {'message': 'Course not found'}, 404
+
+
+
+
+
 
 
 

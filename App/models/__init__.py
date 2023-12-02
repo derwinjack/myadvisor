@@ -6,6 +6,7 @@ from .student import *
 from .prerequisites import *
 from .coursePlan import *
 from .department import *
-from .courseHistory import *
-from .courseProgram import *
+from .semester import *
 from .studentCourse import *
+from .courseProgram import *
+from .courseHistory import *
