@@ -83,9 +83,14 @@ def test_create_course():
     courseName = "Professional Ethics and Law"
     credits = 3
     rating = 4 
+    type = "core"
+    grade = ""
+    semester= "1"
+    year = "2"
+    complete = "true"
     prereqs=[]
 
-    course = create_course(courseCode, courseName, rating, credits, prereqs)
+    course = create_course(courseCode, courseName, credits, rating, type, grade, semester, year, complete  , prereqs)
 
     assert get_course_by_courseCode("INFO2605") != None
 
@@ -94,8 +99,9 @@ class CourseIntegrationTests(unittest.TestCase):
     def test_courses_sorted_by_rating(self):
         prereqs=[]
 
-        create_course("COMP6000", "DNS", 3, 3, prereqs)
-        create_course("COMP6001", "DSN", 1, 3, prereqs)
+        create_course("COMP6000", "DNS", 3, 3,"core","",1,3,"", prereqs) 
+        create_course("COMP6001", "DSN 2", 1, 3,"core","",1,3,"", prereqs)
+        create_course("COMP6002", "DSN 3", 5, 3,"elec","",2,3,"", prereqs)
         sortedCourses = courses_Sorted_byRating_Objects()
 
         self.assertTrue(sortedCourses)
@@ -105,10 +111,9 @@ class CourseIntegrationTests(unittest.TestCase):
 
 
     def test_create_prerequisite(self):
-        create_course("MATH1115", "Fundamental Mathematics for the General Sciences 1",1,6,[])
-        create_course("MATH2250", "Industrial Statistics",4,3,[])
+        create_course("MATH1115", "Fundamental Mathematics for the General Sciences 1",1,6,"core","",1,1,"",[])
+        create_course("MATH2250", "Industrial Statistics",4,3,"core","",2,2,"",[])
         
         create_prereq("MATH1115","Industrial Statistics")
         prereqs=getPrereqCodes("Industrial Statistics")
         self.assertEqual(['MATH1115'],prereqs)
-
