@@ -12,7 +12,6 @@ class Course(db.Model):
     type = db.Column(db.string(5))
     grade = db.Column(db.Float)
     semester = db.Column(db.Integer)
-    year = db.Column(db.Integer)
     course_plan_id = db.Column(db.Integer, db.ForeignKey('course_plans.id'), nullable=False)
     
     
