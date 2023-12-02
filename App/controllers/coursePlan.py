@@ -1,4 +1,5 @@
 from flask import request
+from App.controllers.course import get_all_course_codes, get_all_courses
 from App.models import CoursePlan, Course, Student, Program
 from App.database import db 
 from App.controllers import program
@@ -11,6 +12,8 @@ from App.controllers import (
     
 )
 
+def convertToList(iterable):
+    return list(iterable)
 
 
 def create_CoursePlan(id):
@@ -162,7 +165,8 @@ def getRemainingCore(Student):
     remaining = []
 
     if programme:
-        reqCore=get_allCore(programme.name)
+        #reqCore=get_allCore(programme.name)
+        reqCore=program.get_core_courses(programme)
         completed = Student.course_history
         remaining=getRemainingCourses(completed,reqCore)
     
@@ -174,7 +178,8 @@ def getRemainingFoun(Student):
     remaining =[]
 
     if programme:
-        reqFoun = get_allFoun(programme.name)
+        #reqFoun = get_allFoun(programme.name)
+        reqFoun = program.get_foun_courses(programme)
         completed = Student.course_history
         remaining=getRemainingCourses(completed,reqFoun)
     
@@ -186,7 +191,8 @@ def getRemainingElec(Student):
     remaining = []
 
     if programme:
-        reqElec = get_allElectives(programme.name)  # Use the instance method to get elective courses
+        #reqElec = get_allElectives(programme.name)  # Use the instance method to get elective courses
+        reqElec = program.get_elective_courses(programme)
         completed = Student.course_history
         remaining = getRemainingCourses(completed, reqElec)
             
@@ -197,10 +203,12 @@ def remElecCredits(Student):
     programme = get_program_by_id(Student.program_id)  # Get the student's program
     completedcourses = Student.course_history
     requiredCreds = 0
+    type = 'elec'
 
     if programme:
         requiredCreds = programme.elective_credits  # Access the elective_credits attribute
-        elective_courses = get_allElectives(programme.name)  # Use the instance method to get elective courses
+        courses = get_all_courses(program)  # Use the instance method to get elective courses
+        elective_courses = program.get_all_courses_by_type(type)
         electCodes = convertToList(elective_courses)
         if electCodes:
             for code in electCodes:
@@ -239,6 +247,25 @@ def getTopfive(list):
     return list[:5]
 
 def PrioritizeElectivesStrategy(Student):
+    program = get_program_by_id(Student.program_id)
+    completed = Student.course_history
+    codesSortedbyelectives = program.programCourses_SortedbyElectivesFirst(Student.program_id)
+    type = 'elec'
+    coursesToDo = removeCoursesFromList(completed, codesSortedbyelectives)
+    elecCredits = remElecCredits(Student)
+    
+    if elecCredits == 0:
+        allElectives = program.get_all_courses_by_type(type)
+        coursesToDo = removeCoursesFromList(allElectives, coursesToDo)
+    
+    coursesToDo = findAvailable(coursesToDo)
+
+    ableToDo = checkPrereq(Student, coursesToDo)
+    
+    
+    return getTopfive(ableToDo)
+
+#def PrioritizeElectivesStrategy(Student):
     #get available electives
     electives=findAvailable(getRemainingElec(Student))      
     credits=remElecCredits(Student)
@@ -271,12 +298,6 @@ def EasyCoursesStrategy(Student):
     codesSortedbyRating = program.programCourses_SortedbyHighestRating(Student.program_id)
 
     coursesToDo = removeCoursesFromList(completed, codesSortedbyRating)
-
-    elecCredits = remElecCredits(Student)
-    
-    if elecCredits == 0:
-        allElectives = convertToList(get_allElectives(program.name))
-        coursesToDo = removeCoursesFromList(allElectives, coursesToDo)
     
     coursesToDo = findAvailable(coursesToDo)
 
@@ -355,12 +376,6 @@ def FastGradStrategy(Student):
     completed = Student.course_history
 
     coursesToDo = removeCoursesFromList(completed, sortedCourses)
-
-    elecCredits = remElecCredits(Student)
-    
-    if elecCredits == 0:
-        allElectives = convertToList(get_allElectives(program.name))
-        coursesToDo = removeCoursesFromList(allElectives, coursesToDo)
     
     coursesToDo = findAvailable(coursesToDo)
     ableToDo = checkPrereq(Student, coursesToDo)
