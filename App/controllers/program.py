@@ -1,5 +1,5 @@
 from flask import jsonify, request
-from App.models import Program
+from App.models import Program, courseProgram
 from App.database import db
 from App.models.course import Course
 
@@ -76,6 +76,78 @@ def get_all_courses(programID):
     all = core_courses + elective_courses + foun_courses
     return all
 
+def get_all_courses_by_type(type):
+    try:
+        courses = Course.query.filter_by(type=type).all()
+        if courses:
+            return courses
+        else:
+            raise ValueError(f"No courses found with type '{type}'")
+    except Exception as e:
+        # Log the exception or handle it based on your application's needs
+        print(f"Error: {e}")
+        return None
+
+#def create_programCourse(name, code, num):
+
+def create_programCourse(program_id, course_id):
+    # Creating a new entry in the 'course_programs' table
+    new_program_course = courseProgram(
+        program_id=program_id,
+        course_id=course_id
+        # You can add more attributes as needed, such as course_type
+    )
+
+
+    try:
+        # Adding the new entry to the database session and committing the changes
+        db.session.add(new_program_course)
+        db.session.commit()
+        print("ProgramCourse created successfully")
+    except Exception as e:
+        # Handle exceptions, such as unique constraint violations
+        db.session.rollback()
+        print(f"Error creating ProgramCourse: {e}")
+    finally:
+        # Close the session to release resources
+        db.session.close()
+
+
+def get_all_programCourses():
+    programCourses = courseProgram.query.all()
+
+    courses_data = []
+
+    for programCourse in programCourses:
+        course_id = programCourse.course_id
+        course = Course.query.filter_by(id=course_id).first()
+
+        if course:
+            courses_data.append({
+                'program_id': programCourse.program_id,
+                'course_id': course_id,
+                'course_name': course.name  # Assuming there's a 'name' attribute in your Course model
+            })
+
+    return jsonify({'courses': courses_data}), 200
+
+def get_all_programCourses_coursecode():
+    programCourses = courseProgram.query.all()
+
+    courses_data = []
+
+    for programCourse in programCourses:
+        course_id = programCourse.course_id
+        course = Course.query.filter_by(id=course_id).first()
+
+        if course:
+            courses_data.append({
+                'course_id': programCourse.course_id,
+                 # Assuming there's a 'name' attribute in your Course model
+            })
+
+    return jsonify({'courses': courses_data}), 200
+
 
 def programCourses_SortedbyHighestCredits(program_id):
     # Assuming you have a Course model with a program_id field
@@ -103,5 +175,6 @@ def programCourses_SortedbyElectivesFirst(program_id):
     sorted_courses = sorted(program_courses, key=lambda x: (x.type != 'elec', x.credits), reverse=True)
 
     return sorted_courses
+
 
 
