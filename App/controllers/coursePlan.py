@@ -407,7 +407,7 @@ def get_strategy_instance(strategy_type):
         return FastGradStrategy(Student)
     elif strategy_type == 'easycourses':
         return EasyCoursesStrategy(Student)
-    elif strategy_type == 'prioritizeplectives':
+    elif strategy_type == 'prioritizeelectives':
         return PrioritizeElectivesStrategy(Student)
     else:
         # Default to CustomPlanStrategy if the strategy_type is not recognized
