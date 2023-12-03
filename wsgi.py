@@ -123,8 +123,9 @@ def add_program_requirements(name,code,num):
 
 @staff_cli.command("addofferedcourse",help='testing add courses offered feature')
 @click.argument("code", type=str)
+@click.argument("semester", type=str)
 def add_offered_course(code):
-  course=addSemesterCourses(code)
+  course=addSemesterCourses(code, semester.id)
   if course:
     print(f'Course details: {course}')
 
@@ -154,8 +155,9 @@ def list_staff_command(format):
 @student_cli.command("addCourse", help="Student adds a completed course to their history")
 @click.argument("student_id", type=str)
 @click.argument("code", type=str)
-def addCourse(student_id, code):
-    addCoursetoHistory(student_id, code)
+@click.argument("grade", type=str)
+def addCourse(student_id, code, grade):
+    add_course_to_course_history(student_id, code, grade)
 
 @student_cli.command("getCompleted", help="Get all of a student completed courses")
 @click.argument("student_id", type=str)
@@ -171,10 +173,10 @@ def courseToPlan():
 
 @student_cli.command("generate", help="Generates a course plan based on what they request")
 @click.argument("student_id", type=str)
-@click.argument("command", type=str)
-def generatePlan(student_id, command):
+@click.argument("plantype", type=str)
+def generatePlan(student_id, plantype):
     student = get_student_by_id(student_id)
-    courses = generator(student, command)
+    courses = get_strategy_instance(plantype)
     for c in courses:
         print(c)
 
@@ -426,13 +428,15 @@ def get_course(code):
 
 @course.command('nextsem', help='Add a course to offered courses')
 @click.argument('code', type=str)
-def add_course(code):
-    course = addSemesterCourses(code)
+@click.argument('semester', type=str)
+def add_course(code, semester_id):
+    course = addSemesterCourses(code, semester_id)
     print(f'Course Name: {course.courseName}') if course else print(f'error')
 
 @course.command('getNextSemCourses', help='Get all the courses offered next semester')
-def allSemCourses():
-    courses = get_all_OfferedCodes()
+@click.argument('semester', type=str)
+def allSemCourses(semester_id):
+    courses = getAllCourses(semester_id)
 
     if courses:
         for c in courses:
