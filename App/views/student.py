@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
 from flask_login import current_user, login_required
+
+from App.controllers.courseHistory import add_course_to_course_history, getCompletedCourseCodes
 from.index import index_views
 
 from App.controllers import (
@@ -49,6 +51,7 @@ def create_student_route():
 def add_course_to_student_route():
     student_id = request.json['student_id']
     course_code = request.json['course_code']
+    grade = request.json['grade']
 
     username=current_user.username
     if not verify_student(username):    #verify that the user is logged in
@@ -71,7 +74,7 @@ def add_course_to_student_route():
     if course_code in completed_courses:
         return jsonify({'Error': 'Course already completed'}), 400
 
-    addCoursetoHistory(student_id, course_code)
+    add_course_to_course_history(student_id, course_code, grade)
     return jsonify({'Success!': f"Course {course_code} added to student {student_id}'s course history"}), 200
 
 
@@ -108,3 +111,4 @@ def create_student_plan_route():
 
 
     
+
