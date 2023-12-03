@@ -401,17 +401,17 @@ def FastGradStrategy(Student):
 
 #********(Trial and error Please Review)
 def get_strategy_instance(strategy_type):
-    if strategy_type == 'CustomPlanStrategy':
-        return CustomPlanStrategy()
-    elif strategy_type == 'FastGradStrategy':
-        return FastGradStrategy()
-    elif strategy_type == 'EasyCoursesStrategy':
-        return EasyCoursesStrategy()
-    elif strategy_type == 'PrioritizeElectivesStrategy':
-        return PrioritizeElectivesStrategy()
+    if strategy_type == 'customplan':
+        return CustomPlanStrategy(Student)
+    elif strategy_type == 'fastgrad':
+        return FastGradStrategy(Student)
+    elif strategy_type == 'easycourses':
+        return EasyCoursesStrategy(Student)
+    elif strategy_type == 'prioritizeplectives':
+        return PrioritizeElectivesStrategy(Student)
     else:
         # Default to CustomPlanStrategy if the strategy_type is not recognized
-        return CustomPlanStrategy()
+        return CustomPlanStrategy(Student)
 
 
 #def generator(Student, command):

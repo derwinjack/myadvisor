@@ -1,5 +1,5 @@
 import pytest, unittest
-from App.models import Course, Prerequisites
+from App.models import Course, Prerequisites, prerequisites
 from App.controllers import create_course, courses_Sorted_byRating_Objects, get_course_by_courseCode, create_prereq, getPrereqCodes
 from App.main import create_app
 from App.database import db, create_db
@@ -11,28 +11,49 @@ class CourseUnitTests(unittest.TestCase):
         courseName = "Professional Ethics and Law"
         credits = 3
         rating = 4 
+        type = "core"
+        grade = ""
+        semester= "1"
+        year = "2"
+        complete = "true"
 
-        course = Course(courseCode, courseName, rating, credits)
+        course = Course(courseCode, courseName, credits,rating, type, grade, semester, year, complete )
 
         self.assertEqual(course.courseCode, courseCode)
         self.assertEqual(course.courseName, courseName)
         self.assertEqual(course.credits, credits)
         self.assertEqual(course.rating, rating)
+        self.assertEqual(course.type, type)
+        self.assertEqual(course.grade, grade) 
+        self.assertEqual(course.semester, semester)
+        self.assertEqual(course.year, year)
+        self.assertEqual(course.complete, complete)               
 
     def test_course_json(self):
         courseCode = "INFO2605"
         courseName = "Professional Ethics and Law"
         credits = 3
         rating = 4 
-        
-        course = Course(courseCode, courseName, rating, credits)
+        type = "core"
+        grade = ""
+        semester= "1"
+        year = "2"
+        complete = "true"
+
+        course = Course(courseCode, courseName, credits,rating, type, grade, semester, year, complete )
         course_json = course.get_json()
 
         self.assertDictEqual(course_json, {
-            'Course Code:': courseCode,
-            'Course Name: ': courseName,
-            'Course Rating: ': rating,
-            'No. of Credits: ': credits
+            'Course Code:': self.id,
+            'Course Name: ': self.courseTitle,
+            'Course Grade: ': self.grade,
+            'No. of Credits: ': self.credits,
+            'Course Type: ': self.type,
+            'course rating': self.rating,
+            'Semester: ': self.semester,
+            'Year: ': self.year,
+            'Completed?': self.complete,
+            'Prerequisites: ': [prerequisites.get_json() for prerequisite in self.prerequisites]
             })
 
 
@@ -62,9 +83,14 @@ def test_create_course():
     courseName = "Professional Ethics and Law"
     credits = 3
     rating = 4 
+    type = "core"
+    grade = ""
+    semester= "1"
+    year = "2"
+    complete = "true"
     prereqs=[]
 
-    course = create_course(courseCode, courseName, rating, credits, prereqs)
+    course = create_course(courseCode, courseName, credits, rating, type, grade, semester, year, complete  , prereqs)
 
     assert get_course_by_courseCode("INFO2605") != None
 
@@ -73,8 +99,9 @@ class CourseIntegrationTests(unittest.TestCase):
     def test_courses_sorted_by_rating(self):
         prereqs=[]
 
-        create_course("COMP6000", "DNS", 3, 3, prereqs)
-        create_course("COMP6001", "DSN", 1, 3, prereqs)
+        create_course("COMP6000", "DNS", 3, 3,"core","",1,3,"", prereqs) 
+        create_course("COMP6001", "DSN 2", 1, 3,"core","",1,3,"", prereqs)
+        create_course("COMP6002", "DSN 3", 5, 3,"elec","",2,3,"", prereqs)
         sortedCourses = courses_Sorted_byRating_Objects()
 
         self.assertTrue(sortedCourses)
@@ -84,8 +111,8 @@ class CourseIntegrationTests(unittest.TestCase):
 
 
     def test_create_prerequisite(self):
-        create_course("MATH1115", "Fundamental Mathematics for the General Sciences 1",1,6,[])
-        create_course("MATH2250", "Industrial Statistics",4,3,[])
+        create_course("MATH1115", "Fundamental Mathematics for the General Sciences 1",1,6,"core","",1,1,"",[])
+        create_course("MATH2250", "Industrial Statistics",4,3,"core","",2,2,"",[])
         
         create_prereq("MATH1115","Industrial Statistics")
         prereqs=getPrereqCodes("Industrial Statistics")
