@@ -76,6 +76,17 @@ def get_all_courses(programID):
     all = core_courses + elective_courses + foun_courses
     return all
 
+def get_allCore(programname):
+        # Assuming programname is unique, otherwise, you might need additional filtering
+        program = Program.query.filter_by(name=programname).first()
+
+        if program:
+            # Assuming you have a relationship between Program and Course, adjust as needed
+            core_courses = Course.query.filter_by(type='core', course_plan_id=program.id).all()
+            return core_courses
+        else:
+            return None
+
 def get_all_courses_by_type(type):
     try:
         courses = Course.query.filter_by(type=type).all()
@@ -175,6 +186,8 @@ def programCourses_SortedbyElectivesFirst(program_id):
     sorted_courses = sorted(program_courses, key=lambda x: (x.type != 'elec', x.credits), reverse=True)
 
     return sorted_courses
+
+
 
 
 

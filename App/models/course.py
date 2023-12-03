@@ -6,12 +6,13 @@ class Course(db.Model):
     __tablename__='courses'
     id = db.Column(db.String(8), primary_key=True)
     courseTitle = db.Column(db.String(50))
-    complete = db.Column(db.Boolean)
     credits = db.Column(db.Integer)
     rating = db.Column(db.Integer)
-    type = db.Column(db.string(5))
+    type = db.Column(db.String(5))
     grade = db.Column(db.Float)
     semester = db.Column(db.Integer)
+    year = db.Column(db.Integer)
+    complete = db.Column(db.Boolean)
     course_plan_id = db.Column(db.Integer, db.ForeignKey('course_plans.id'), nullable=False)
     
     
@@ -28,7 +29,7 @@ class Course(db.Model):
         self.semester = semester
         self.year = year
         self.complete = complete
-        self.prereq_id = prereq
+        self.prereq = prereq
     
     def get_json(self):
         return{

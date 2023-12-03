@@ -4,6 +4,8 @@ from App.controllers import prerequistes, semester
 from App.database import db
 import json, csv
 
+from App.models.program import Program
+
 #def createPrerequistes(prereqs, courseName):
  ##      prereq_course = Course.query.filter_by(courseCode=prereq_code).first()
         
@@ -68,6 +70,18 @@ def createCoursesfromFile(file_path):
 def get_course_by_courseCode(code):
     return Course.query.filter_by(courseCode=code).first()
 
+def get_all_course_codes():
+    try:
+        course_codes = Course.query.with_entities(Course.courseCode).all()
+        if course_codes:
+            return [code[0] for code in course_codes]
+        else:
+            raise ValueError("No course codes found.")
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+    
+
 def courses_Sorted_byRating():
     courses =  Course.query.order_by(Course.rating.asc()).all()
     codes = []
@@ -79,6 +93,8 @@ def courses_Sorted_byRating():
 
 def courses_Sorted_byRating_Objects():
     return Course.query.order_by(Course.rating.asc()).all()
+
+
     
 
 def get_prerequisites(code):
@@ -128,6 +144,37 @@ def get_course(course_id):
         return course_data
     else:
         return {"message": "Course not found"}, 404
+    
+
+def addSemesterCourses(self, code, semester):
+        course = Course.query.filter_by(id=code).first()
+
+        if course:
+            course.semester = semester
+            db.session.commit()
+            return True
+        else:
+            return False
+
+def getAllCourses(semester_id):
+        
+        courses = Course.query.filter_by(semester=semester_id).all()
+        course_ids = [course.id for course in courses]
+        return course_ids
+
+
+def get_course_codes_by_semester(self, programname, semester):
+        program = Program.query.filter_by(name=programname).first()
+
+        if program:
+            # Assuming you have a relationship between Program and Course, adjust as needed
+            courses = Course.query.filter_by(course_plan_id=program.id, semester=semester).all()
+
+            # Extracting course codes
+            course_codes = [course.id for course in courses]
+            return course_codes
+        else:
+            return None
 
 
 def update_course(course_code):
@@ -159,6 +206,10 @@ def delete_course(course_code):
         return {'message': 'Course deleted successfully'}, 200
     else:
         return {'message': 'Course not found'}, 404
+
+
+
+
 
 
 

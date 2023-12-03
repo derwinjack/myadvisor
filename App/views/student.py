@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
+rom flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
 from flask_login import current_user, login_required
 
 from App.controllers.courseHistory import add_course_to_course_history, getCompletedCourseCodes
+from App.controllers.coursePlan import get_strategy_instance
 from.index import index_views
 
 from App.controllers import (
@@ -15,7 +16,6 @@ from App.controllers import (
     get_program_by_name,
     get_student_by_id,
     get_course_by_courseCode,
-    generator,
     addCourseToPlan,
     verify_student
 )
@@ -80,11 +80,11 @@ def add_course_to_student_route():
 
 ##Add course plan 
 
-@student_views.route('/student/create_student_plan', methods=['POST'])
+@student_views.route('/student/generate_student_plan', methods=['POST'])
 @login_required
 def create_student_plan_route():
     student_id = request.json['student_id']
-    command = request.json['command']
+    plantype = request.json['plantype']
 
     username=current_user.username
     if not verify_student(username):    #verify that the student is logged in
@@ -95,16 +95,15 @@ def create_student_plan_route():
     if not student:
         return jsonify({'Error': 'Student not found'}), 400
     
-    valid_command = ["electives", "easy", "fastest"]
+    valid_plantype= ["customplan", "easycourses", "fastgrad", "prioritizeelectives"]
 
-    if command in valid_command:
-        courses = generator(student, command)
-        return jsonify({'Success!': f"{command} plan added to student {student_id} ", "courses" : courses}), 200
+    if plantype in valid_plantype:
+        courses = get_strategy_instance(plantype)
+        return jsonify({'Success!': f"{plantype} plan added to student {student_id} ", "courses" : courses}), 200
 
-    course = get_course_by_courseCode(command)
+    course = get_course_by_courseCode(courses)
     if course:
-        addCourseToPlan(student, command)
-        return jsonify({'Success!': f"Course {command} added to student {student_id} plan"}), 200
+        return jsonify({'Success!': f"Courses added to student {student_id} plan"}), 200
     
     return jsonify("Invalid command. Please enter 'electives', 'easy', 'fastest', or a valid course code."), 400
 
