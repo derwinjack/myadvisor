@@ -1,5 +1,6 @@
 from App.database import db
 from App.models import department
+from App.models import student 
 
 class Program(db.Model):
     __tablename__ = 'programs'
@@ -11,7 +12,7 @@ class Program(db.Model):
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
     
     dept = db.relationship('Department', back_populates='prog')
-    stu = db.relationship('Student', back_populates='prog', uselist=False)
+    students = db.relationship('Student', back_populates='prog', uselist=False)
     
 
     def __init__(self, name, core, elect, foun):
