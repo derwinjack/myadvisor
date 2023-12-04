@@ -15,7 +15,7 @@ from App.models.program import Program
 def create_course():
     data = request.get_json()
     prereq_id = data.get('prereq_id')  
-    prereq = Prerequisites.query.get(prereq_id) if prereq_id else None
+    prereq_id = Prerequisites.query.get(prereq_id) if prereq_id else None
     semester_id = int(data['semester_id'])
 
 
@@ -54,7 +54,7 @@ def createCoursesfromFile(file_path):
                 semester=row['semester']
                 year=int (row['year'])
                 complete= row['complete']
-                prereq= row["preReqs"].split(',')
+                prereq= row['preReq']
 
                 create_course(courseCode, courseTitle, credits,rating, grade, semester, year, complete, prereq)
                 
