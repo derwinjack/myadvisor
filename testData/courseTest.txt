@@ -2,15 +2,26 @@ COMP3605
 Data Analytics
 3
 3
-COMP2611, MATH2250
+elec
+70
+1
+3
+true
+COMP2611
 
 COMP3610
 Big Data Analytics
 3
+4
+core
+80
+1
 3
+true
 COMP3605
 
-"COMP2611","Data Structures","3","5",""
-"MATH2250","Industrial Statistics","3","4",""
-"COMP3605","Data Analytics","3","3","COMP2611, MATH2250"
-"COMP3610","Big Data Analytics","3","5","COMP3605"
+
+"COMP2611","Data Structures","3","5","core","60","1","3","true",""
+"MATH2250","Industrial Statistics","3","4","core","69","1","3","true",""
+"COMP3605","Data Analytics","3","3","core","70","1","3","true","COMP2611"
+"COMP3610","Big Data Analytics","3","5","core","80","1","3","true","COMP3605"
