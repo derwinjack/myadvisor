@@ -11,10 +11,7 @@ class Semester(db.Model):
     def __init__(self, sem_id, sem_title):
         self.id = sem_id
         self.semester_title = sem_title
-
-from App.database import db .
-
-
+        
 
         
         
